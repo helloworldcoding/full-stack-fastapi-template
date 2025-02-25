@@ -38,6 +38,15 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
+    STATIC_DOMAIN: str = ""
+    STATIC_PREFIX: str = "bkstatic"
+
+    # 结尾不要加/
+    ONE_API_BASE_URL: str = "http://127.0.0.1:3000/v1"
+    ONE_TOKEN: str = ""
+    # 最后一个/不要漏掉
+    TTS_ENDPOINT: str = ""
+
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []

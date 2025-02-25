@@ -107,6 +107,54 @@ export type ItemsReadItemsData = {
 
 export type ItemsReadItemsResponse = ItemsPublic
 
+export type ResourceCreate = {
+    title: string
+    url: string
+    resource_type: string
+    description?: string | null
+  }
+
+export type ResourcePublic = {
+    id: string
+    resource_type: string
+    url: string
+    title: string
+    description: string
+    tags: Array<string>
+    is_active: boolean
+    created_at: Date
+    updated_at: Date
+}
+export type ResourcesPublic = {
+    data: Array<ResourcePublic>
+    count: number
+}
+export type ResourcesReadResourcesResponse = ResourcesPublic
+
+
+
+export type ArticlePublic = {
+    id: string
+    resoure_id: string
+    article_type: string
+    url: string
+    title: string
+    description: string
+    tags: Array<string>
+    is_active: boolean
+    ai_content: string
+    ai_abstract: string
+    audio: string
+    status: string
+    created_at: Date
+    updated_at: Date 
+}
+export type ArticlesPublic = {
+    data: Array<ArticlePublic>
+    count: number
+}
+export type ArticlesReadArticlesResponse = ArticlesPublic
+
 export type ItemsCreateItemData = {
   requestBody: ItemCreate
 }
