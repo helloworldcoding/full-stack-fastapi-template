@@ -83,12 +83,9 @@ jobs:
         port: ${{ secrets.TEST_PORT }}
         script: |
           cd /data/www/ai_boke/backend
-          mkdir -p app/static
+          mkdir -p app/static/audio
+          mkdir -p app/static/image
           source .venv/bin/activate
           uv sync
           bash scripts/prestart.sh
-          deactivate
-
-          cd /data/www/ai_boke/frontend
-          npm install
-          npm run build
+          sudo systemctl restart ai_boke.service

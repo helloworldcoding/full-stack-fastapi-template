@@ -11,8 +11,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
-import { ArticlesService, ItemsService, ResourcesService } from "@/client"
-import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
+import { ArticlesService } from "@/client"
 import AddItem from "@/components/Items/AddItem"
 import PendingItems from "@/components/Pending/PendingItems"
 import {
@@ -120,7 +119,7 @@ function ItemsTable() {
                     {item.audio}
                 </Table.Cell>
               <Table.Cell>
-                <ItemActionsMenu item={item} />
+                {/* <ItemActionsMenu item={item} /> */}
               </Table.Cell>
             </Table.Row>
           ))}

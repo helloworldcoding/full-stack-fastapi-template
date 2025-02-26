@@ -11,9 +11,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { FiSearch } from "react-icons/fi"
 import { z } from "zod"
 
-import { ItemsService, ResourcesService } from "@/client"
-import { ItemActionsMenu } from "@/components/Common/ItemActionsMenu"
-import AddItem from "@/components/Items/AddItem"
+import { ResourcesService } from "@/client"
 import AddResource from "@/components/Resources/AddResource"
 import PendingItems from "@/components/Pending/PendingItems"
 import {
@@ -121,7 +119,7 @@ function ItemsTable() {
                     {item.is_active ? "Yes" : "No"}
                 </Table.Cell>
               <Table.Cell>
-                <ItemActionsMenu item={item} />
+                {/* <ItemActionsMenu item={item} /> */}
               </Table.Cell>
             </Table.Row>
           ))}

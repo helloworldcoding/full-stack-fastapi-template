@@ -12,7 +12,7 @@ import {
 import { useState } from "react"
 import { FaPlus } from "react-icons/fa"
 
-import { type ItemCreate, ItemsService, ResourceCreate, ResourcesService } from "@/client"
+import { type ItemCreate,  ResourceCreate, ResourcesService } from "@/client"
 import type { ApiError } from "@/client/core/ApiError"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"

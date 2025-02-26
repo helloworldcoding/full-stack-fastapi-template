@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import SessionDep
 from app.models import Resource, ResourceCreate, Resources, ResourceUpdate
 from app.services.resource import (
     check_resource,
@@ -23,18 +23,14 @@ def read_resources(session: SessionDep, skip: int = 0, limit: int = 100) -> any:
 
 
 @router.post("/add", response_model=Resource)
-def add_resources(
-    *, session: SessionDep, current_user: CurrentUser, resource_in: ResourceCreate
-) -> any:
+def add_resources(*, session: SessionDep, resource_in: ResourceCreate) -> any:
     """
     Create new resource.
     """
     exists = check_resource(session=session, url=resource_in.url)
     if exists:
         raise HTTPException(status_code=400, detail="资源已经存在")
-    return create_resource(
-        session=session, current_user=current_user, resource_in=resource_in
-    )
+    return create_resource(session=session, resource_in=resource_in)
 
 
 @router.post("/update/{id}", response_model=ResourceUpdate)
