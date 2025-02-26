@@ -1,13 +1,17 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import feedparser
-from sqlmodel import desc, func, select
+from sqlalchemy import or_  # 添加这个导入
+from sqlmodel import Session, create_engine, desc, func, select, update
 
 from app.api.deps import SessionDep
+from app.core.config import settings
 from app.models import Article, Resource, ResourceCreate, Resources, ResourceUpdate
 from app.services.article import query_article
+
+engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 def get_resources(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
@@ -35,53 +39,83 @@ def create_resource(*, session: SessionDep, resource_in: ResourceCreate) -> Any:
     """
     Create new  resource.
     """
-    entries = []
-    if resource_in.resource_type == "rss":
-        feed, entries = parse_rss(resource_in.url)
-        resource_in.title = (
-            feed["title"] if resource_in.title == "" else resource_in.title
-        )
-        resource_in.description = (
-            feed["description"]
-            if resource_in.description == ""
-            else resource_in.description
-        )
-    elif resource_in.resource_type == "url":
-        entries = [
-            {
-                "title": resource_in.title,
-                "link": resource_in.url,
-                "description": resource_in.description,
-                "published": datetime.now(),
-                "published_parsed": datetime.now(),
-            }
-        ]
+    resource_in.status = "created"
     item = Resource.model_validate(resource_in)
     session.add(item)
     session.commit()
     session.refresh(item)
-    # 批量创建 Article
-    articles_to_add = []
-    for entry in entries:
-        article = query_article(session=session, url=entry["link"])
-        if not article:
-            article = Article(
-                resoure_id=item.id,
-                url=entry["link"],
-                title=entry["title"],
-                abstract=entry["description"],
-                publish_at=entry["published"],
-                is_active=False,
-            )
-            articles_to_add.append(article)
-    if articles_to_add:
-        session.add_all(articles_to_add)
-        session.commit()
-        session.refresh(item)
     return item
 
 
-def parse_rss(url: str):
+def parse_resource():
+    """
+    解析内容,每一个小时，扫描一下资源，如果资源没有解析过，就解析一下
+    """
+    articles_to_add = []
+    with Session(engine) as session:
+        statement = select(Resource).where(
+            or_(
+                Resource.last_parse_at.is_(None),
+                Resource.last_parse_at < datetime.now() - timedelta(hours=1),
+            )
+        )
+        resources = session.exec(statement).all()
+        entries = []
+        for resource in resources:
+            if resource.resource_type == "rss":
+                try:
+                    feed, entries = parse_rss(resource.url, resource.id)
+                except Exception as err:
+                    print(err)
+                    continue
+                resource.title = (
+                    feed["title"] if resource.title == "" else resource.title
+                )
+                resource.description = (
+                    feed["description"]
+                    if resource.description == ""
+                    else resource.description
+                )
+            elif resource.resource_type == "url":
+                entries = [
+                    {
+                        "title": resource.title,
+                        "link": resource.url,
+                        "description": resource.description,
+                        "published": datetime.now(),
+                        "published_parsed": datetime.now(),
+                        "resource_id": resource.id,
+                    }
+                ]
+        resource_ids = []
+        for entry in entries:
+            article = query_article(session=session, url=entry["link"])
+            if not article:
+                article = Article(
+                    resource_id=entry["resource_id"],
+                    url=entry["link"],
+                    title=entry["title"],
+                    abstract=entry["description"],
+                    publish_at=entry["published"],
+                    is_active=False,
+                )
+                resource_ids.append(entry["resource_id"])
+                articles_to_add.append(article)
+        if articles_to_add:
+            session.add_all(articles_to_add)
+            session.commit()
+        if resource_ids:
+            # 更新这些资源的 last_parse_at
+            statement = (
+                update(Resource)
+                .where(Resource.id.in_(resource_ids))
+                .values(last_parse_at=datetime.now())
+            )
+            session.exec(statement)
+            session.commit()
+
+
+def parse_rss(url: str, resource_id: str = ""):
     d = feedparser.parse(url)
     entries = []
     for entry in d.entries:
@@ -92,6 +126,7 @@ def parse_rss(url: str):
                 "description": entry.description,
                 "published": entry.published,
                 "published_parsed": entry.published_parsed,
+                "resource_id": resource_id,
             }
         )
     feed = {

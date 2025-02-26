@@ -17,6 +17,8 @@ from app.services.llm import (
 )
 from app.services.tts import bk_tts
 
+engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+
 
 def get_articles(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     """
@@ -77,7 +79,6 @@ async def crawl_content(limit: int = 1) -> Articles | None:
     Get content
     """
     # 创建新的数据库会话
-    engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
     update_list = []
     with Session(engine) as session:
         articles = (
@@ -119,8 +120,6 @@ async def ai_parse_content(limit: int = 10):
     """
     AI parse content
     """
-    # 创建新的数据库会话
-    engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
     with Session(engine) as session:
         stmt = (
             select(Article)
@@ -162,8 +161,6 @@ def aggregate_by_tag() -> list[str]:
     """
     Get all unique tags from Article table
     """
-    # 创建新的数据库会话
-    engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
     with Session(engine) as session:
         # Using unnest since tags is stored as an ARRAY type
         statement = select(Article).where(
@@ -208,7 +205,7 @@ def aggregate_by_tag() -> list[str]:
                     content=query,
                     tags=combined_tags,
                     article_type="ai聚合",
-                    resoure_id=",".join(resource_ids),
+                    resource_id=",".join(resource_ids),
                 )
                 # Convert ArticleCreate to Article model
                 article = Article.model_validate(article_data)
@@ -233,8 +230,6 @@ def generate_audio() -> list[str]:
     """
     Generate audio for articles
     """
-    # 创建新的数据库会话
-    engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
     with Session(engine) as session:
         stmt = (
             select(Article)

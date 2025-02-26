@@ -135,7 +135,7 @@ export type ResourcesReadResourcesResponse = ResourcesPublic
 
 export type ArticlePublic = {
     id: string
-    resoure_id: string
+    resource_id: string
     article_type: string
     url: string
     title: string

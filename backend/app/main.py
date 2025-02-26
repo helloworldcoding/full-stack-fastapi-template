@@ -18,6 +18,7 @@ from app.services.article import (
     crawl_content,
     generate_audio,
 )
+from app.services.resource import parse_resource
 
 # 初始化调度器
 scheduler = AsyncIOScheduler()
@@ -25,6 +26,13 @@ scheduler = AsyncIOScheduler()
 
 # 配置任务
 def configure_scheduler():
+    scheduler.add_job(
+        parse_resource,
+        trigger=IntervalTrigger(seconds=10),
+        id="parse_resource",
+        max_instances=1,  # 确保同一时间只有一个任务实例在运行
+        coalesce=True,  # 如果错过了执行时间，只运行一次
+    )
     # 每 10 秒执行一次（同步任务）
     scheduler.add_job(
         crawl_content,

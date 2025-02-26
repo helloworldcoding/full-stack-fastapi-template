@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import AnyHttpUrl, EmailStr, field_validator
-from sqlalchemy import String
+from sqlalchemy import TEXT, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlmodel import Column, Field, Relationship, SQLModel  # type: ignore
 
@@ -125,10 +125,12 @@ class NewPassword(SQLModel):
 class ResourceBase(SQLModel):
     url: str = Field(unique=True, index=True)
     title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default="")
+    description: str | None = Field(default="", sa_column=Column(TEXT))
     resource_type: str | None = Field(default="", max_length=50)  # rss url
     tags: list[str] | None = Field(default=[], sa_column=Column(ARRAY(String(50))))
     is_active: bool = True
+    status: str | None = Field(default="")  # 未处理，已处理
+    last_parse_at: datetime | None = Field(default=datetime.now())
 
     @field_validator("url")
     def validate_url(cls, value: str) -> str:
@@ -156,13 +158,13 @@ class Resources(SQLModel):
 
 
 class ArticleBase(SQLModel):
-    resoure_id: str = Field(index=True)
+    resource_id: str = Field(index=True)
     url: str = Field(index=True, max_length=500)
     title: str = Field(min_length=1, max_length=255)
-    abstract: str | None = Field(default="")
-    content: str | None = Field(default="")
-    ai_abstract: str | None = Field(default="")
-    ai_content: str | None = Field(default="")
+    abstract: str | None = Field(default="", sa_column=Column(TEXT))
+    content: str | None = Field(default="", sa_column=Column(TEXT))
+    ai_abstract: str | None = Field(default="", sa_column=Column(TEXT))
+    ai_content: str | None = Field(default="", sa_column=Column(TEXT))
     tags: list[str] | None = Field(default=[], sa_column=Column(ARRAY(String(50))))
     cover: str | None = Field(default="")
     day: str | None = Field(default="")
