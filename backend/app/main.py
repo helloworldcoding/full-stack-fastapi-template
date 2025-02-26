@@ -13,6 +13,9 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.main import api_router
 from app.core.config import settings
 from app.services.article import (
+    aggregate_by_tag,
+    ai_parse_content,
+    crawl_content,
     generate_audio,
 )
 
@@ -23,35 +26,35 @@ scheduler = AsyncIOScheduler()
 # 配置任务
 def configure_scheduler():
     # 每 10 秒执行一次（同步任务）
-    # scheduler.add_job(
-    #     crawl_content,
-    #     trigger=IntervalTrigger(seconds=20),
-    #     id="crawl_content",
-    #     max_instances=1,  # 确保同一时间只有一个任务实例在运行
-    #     coalesce=True,    # 如果错过了执行时间，只运行一次
-    #     kwargs={'limit': 1},
-    # )
+    scheduler.add_job(
+        crawl_content,
+        trigger=IntervalTrigger(seconds=20),
+        id="crawl_content",
+        max_instances=1,  # 确保同一时间只有一个任务实例在运行
+        coalesce=True,  # 如果错过了执行时间，只运行一次
+        kwargs={"limit": 1},
+    )
 
-    # scheduler.add_job(
-    #     ai_parse_content,
-    #     trigger=IntervalTrigger(seconds=10),
-    #     id="ai_parse_content",
-    #     max_instances=1,  # 确保同一时间只有一个任务实例在运行
-    #     coalesce=True,    # 如果错过了执行时间，只运行一次
-    #     kwargs={'limit': 1},
-    # )
+    scheduler.add_job(
+        ai_parse_content,
+        trigger=IntervalTrigger(seconds=30),
+        id="ai_parse_content",
+        max_instances=1,  # 确保同一时间只有一个任务实例在运行
+        coalesce=True,  # 如果错过了执行时间，只运行一次
+        kwargs={"limit": 1},
+    )
 
-    # scheduler.add_job(
-    #     aggregate_by_tag,
-    #     trigger=IntervalTrigger(seconds=10),
-    #     id="aggregate_by_tag",
-    #     max_instances=1,  # 确保同一时间只有一个任务实例在运行
-    #     coalesce=True,    # 如果错过了执行时间，只运行一次
-    # )
+    scheduler.add_job(
+        aggregate_by_tag,
+        trigger=IntervalTrigger(seconds=40),
+        id="aggregate_by_tag",
+        max_instances=1,  # 确保同一时间只有一个任务实例在运行
+        coalesce=True,  # 如果错过了执行时间，只运行一次
+    )
 
     scheduler.add_job(
         generate_audio,
-        trigger=IntervalTrigger(seconds=20),
+        trigger=IntervalTrigger(seconds=50),
         id="generate_audio",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次
@@ -75,8 +78,9 @@ if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
 
 # 定义 FastAPI 生命周期管理器
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     # 启动时逻辑
+    print(f"Starting {app.title}...")
     print("Starting scheduler...")
     configure_scheduler()
     scheduler.start()
@@ -85,6 +89,7 @@ async def lifespan():
     finally:
         # 关闭时逻辑
         print("Shutting down scheduler...")
+        print(f"Shutting down {app.title}...")
         scheduler.shutdown()
 
 

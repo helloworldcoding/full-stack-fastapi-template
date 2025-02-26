@@ -1,0 +1,92 @@
+# This is a basic workflow to help you get started with Actions
+
+name: DeployTest
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ test ]
+  #pull_request:
+    #branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - name:  checkout code
+      uses: actions/checkout@v4
+
+    #- name: Initialize and update submodules
+    #  run: |
+    #    git submodule init
+    #    git submodule update
+
+
+
+    # - name: Set Node.js 18.18.x
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: 18.18.x
+
+    # - run: npm ci
+
+    # - run: npm run build
+
+    - name: sync files
+      #run: |
+      #  chmod 600 ./deploy_key
+      #  rsync -chav \
+      #  -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no' \
+      #  --exclude /.git/ \
+      #  --exclude /.github/ \
+      #  --exclude /node_modules/ \
+
+      # ssh-keygen -m PEM -t rsa -b 4096
+      uses: easingthemes/ssh-deploy@main
+      ##env:
+      ##ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+      #with:
+      env:
+        # Private Key
+        SSH_PRIVATE_KEY: ${{secrets.TEST_KEY}}
+        # Remote host
+        #REMOTE_HOST: "106.14.36.230"
+        REMOTE_HOST: ${{ secrets.TEST_HOST }}
+        # Remote user
+        REMOTE_USER: ${{ secrets.TEST_USER }}
+        #REMOTE_USER: "www"
+        # Remote port$
+        REMOTE_PORT: ${{ secrets.TEST_PORT }}
+        #REMOTE_PORT: 22
+        # Source directory
+        #ARGS: "-rltgoDzvO --delete"
+        SOURCE: ""
+        # Target directory
+        TARGET: "/data/www/ai_boke"
+        EXCLUDE: .git
+
+    - name: run server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.TEST_HOST }}
+        username: ${{ secrets.TEST_USER }}
+        key: ${{ secrets.TEST_KEY }}
+        port: ${{ secrets.TEST_PORT }}
+        script: |
+          cd /data/www/ai_boke/backend
+          mkdir -p app/static
+          source .venv/bin/activate
+          uv sync
+          bash scripts/prestart.sh
+          deactivate
+
+          cd /data/www/ai_boke/frontend
+          npm install
+          npm run build

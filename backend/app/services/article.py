@@ -136,7 +136,6 @@ async def ai_parse_content(limit: int = 10):
             .limit(limit)
         )
         articles = session.exec(stmt).all()
-        print("asdfasdfasdfsa")
         if not articles:
             print("not article to parse content ")
             return
@@ -256,7 +255,7 @@ def generate_audio() -> list[str]:
             return
         for article in articles:
             try:
-                audio_url = bk_tts(article.ai_abstract)
+                audio_url = bk_tts(article.ai_content)
                 article.audio = audio_url
                 article.status = "generate_audio"
                 article.updated_at = datetime.now()
