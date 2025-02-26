@@ -123,10 +123,9 @@ class NewPassword(SQLModel):
 
 # Shared properties
 class ResourceBase(SQLModel):
-    # url: AnyHttpUrl = Field(unique=True, index=True, max_length=500)
-    url: str = Field(unique=True, index=True, max_length=500)
+    url: str = Field(unique=True, index=True)
     title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default="", max_length=5000)
+    description: str | None = Field(default="")
     resource_type: str | None = Field(default="", max_length=50)  # rss url
     tags: list[str] | None = Field(default=[], sa_column=Column(ARRAY(String(50))))
     is_active: bool = True
@@ -157,10 +156,10 @@ class Resources(SQLModel):
 
 
 class ArticleBase(SQLModel):
-    resoure_id: str = Field(index=True, min_length=0, max_length=4024)
+    resoure_id: str = Field(index=True)
     url: str = Field(index=True, max_length=500)
     title: str = Field(min_length=1, max_length=255)
-    abstract: str | None = Field(default="", max_length=5000)
+    abstract: str | None = Field(default="")
     content: str | None = Field(default="")
     ai_abstract: str | None = Field(default="")
     ai_content: str | None = Field(default="")
