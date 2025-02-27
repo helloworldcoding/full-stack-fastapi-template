@@ -125,9 +125,12 @@ def parse_rss(url: str, resource_id: str = ""):
             elif isinstance(entry.content, list):
                 for item in entry.content:
                     content.append(item.value)
+        title = ""
+        if hasattr(entry, "title"):
+            title = entry.title
         entries.append(
             {
-                "title": entry.title,
+                "title": title,
                 "link": entry.link,
                 "description": entry.description,
                 "published": entry.published,

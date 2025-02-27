@@ -134,8 +134,8 @@ async def crawl_url(url: str) -> ArticleCrawlResponse | None:
         )
         return {
             "url": url,
-            "html": result.html,
-            "cleaned_html": result.cleaned_html,
+            "html": "",
+            "cleaned_html": "",
             "media": result.media,
             "links": result.links,
             "markdown": result.markdown_v2.raw_markdown,
