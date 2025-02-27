@@ -28,7 +28,7 @@ scheduler = AsyncIOScheduler()
 def configure_scheduler():
     scheduler.add_job(
         parse_resource,
-        trigger=IntervalTrigger(seconds=10),
+        trigger=IntervalTrigger(hours=1),
         id="parse_resource",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次
@@ -36,7 +36,7 @@ def configure_scheduler():
     # 每 10 秒执行一次（同步任务）
     scheduler.add_job(
         crawl_content,
-        trigger=IntervalTrigger(seconds=20),
+        trigger=IntervalTrigger(hours=20),
         id="crawl_content",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次
@@ -45,7 +45,7 @@ def configure_scheduler():
 
     scheduler.add_job(
         ai_parse_content,
-        trigger=IntervalTrigger(seconds=30),
+        trigger=IntervalTrigger(hours=30),
         id="ai_parse_content",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次
@@ -54,7 +54,7 @@ def configure_scheduler():
 
     scheduler.add_job(
         aggregate_by_tag,
-        trigger=IntervalTrigger(seconds=40),
+        trigger=IntervalTrigger(hours=40),
         id="aggregate_by_tag",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次
@@ -62,7 +62,7 @@ def configure_scheduler():
 
     scheduler.add_job(
         generate_audio,
-        trigger=IntervalTrigger(seconds=50),
+        trigger=IntervalTrigger(hours=50),
         id="generate_audio",
         max_instances=1,  # 确保同一时间只有一个任务实例在运行
         coalesce=True,  # 如果错过了执行时间，只运行一次

@@ -8,7 +8,13 @@ from sqlmodel import Session, create_engine, desc, func, select
 
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.models import Article, ArticleCreate, Articles, ArticleUpdate
+from app.models import (
+    Article,
+    ArticleCrawlResponse,
+    ArticleCreate,
+    Articles,
+    ArticleUpdate,
+)
 from app.services.llm import (
     deal_content_parse_ret,
     get_content_parse_system_prompt,
@@ -114,6 +120,24 @@ async def crawl_content(limit: int = 1) -> Articles | None:
                 except Exception as err:
                     print(f"crawl {url} error", err)
     return Articles(data=update_list, count=len(update_list))
+
+
+async def crawl_url(url: str) -> ArticleCrawlResponse | None:
+    """
+    Get content
+    """
+    async with AsyncWebCrawler() as crawler:
+        result = await crawler.arun(
+            url=url,
+        )
+        return {
+            "url": url,
+            "html": result.html,
+            "cleaned_html": result.cleaned_html,
+            "media": result.media,
+            "links": result.links,
+            "markdown": result.markdown_v2.raw_markdown,
+        }
 
 
 async def ai_parse_content(limit: int = 10):

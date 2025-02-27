@@ -3,11 +3,19 @@ import uuid
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import SessionDep
-from app.models import Resource, ResourceCreate, Resources, ResourceUpdate
+from app.models import (
+    ParseRssRequest,
+    ParseRssResponse,
+    Resource,
+    ResourceCreate,
+    Resources,
+    ResourceUpdate,
+)
 from app.services.resource import (
     check_resource,
     create_resource,
     get_resources,
+    parse_rss,
     update_resource,
 )
 
@@ -44,3 +52,13 @@ def update_resources(
     Update an resource.
     """
     return update_resource(session=session, id=id, item_in=resource_in)
+
+
+@router.post("/parse-rss", response_model=ParseRssResponse, dependencies=[])
+def crawl_resources(request: ParseRssRequest) -> any:
+    """
+    Crawl resource.
+    """
+    url = request.url
+    _, enties = parse_rss(url)
+    return {"data": enties}

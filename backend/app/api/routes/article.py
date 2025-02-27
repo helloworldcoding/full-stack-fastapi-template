@@ -1,8 +1,15 @@
 from fastapi import APIRouter
 
 from app.api.deps import SessionDep
-from app.models import Articles, ArticlesUpdate
-from app.services.article import crawl_content, get_articles
+from app.models import (
+    AIDebugRequest,
+    AIDebugResponse,
+    ArticleCrawlRequest,
+    ArticleCrawlResponse,
+    Articles,
+    ArticlesUpdate,
+)
+from app.services.article import crawl_content, crawl_url, get_articles
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
@@ -21,3 +28,25 @@ async def crawl() -> any:
     Create new resource.
     """
     return await crawl_content(limit=1)
+
+
+@router.post("/crawl", response_model=ArticleCrawlResponse, dependencies=[])
+async def crawl_resources(request: ArticleCrawlRequest) -> any:
+    """
+    Crawl resource.
+    """
+    url = request.url
+    try:
+        rr = await crawl_url(url)
+        return rr
+    except Exception as err:
+        return {"error": str(err)}
+
+
+@router.post("ai-debug", response_model=AIDebugResponse, dependencies=[])
+async def ai_debug(request: AIDebugRequest) -> any:
+    """
+    调试大模型system prompt
+    """
+    print(request.content)
+    pass

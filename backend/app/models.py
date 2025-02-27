@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
 
-from pydantic import AnyHttpUrl, EmailStr, field_validator
+from dateutil import parser
+from pydantic import AnyHttpUrl, BaseModel, EmailStr, field_validator
 from sqlalchemy import TEXT, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlmodel import Column, Field, Relationship, SQLModel  # type: ignore
@@ -205,3 +206,62 @@ class Articles(SQLModel):
 class ArticlesUpdate(SQLModel):
     data: list[ArticleUpdate]
     count: int
+
+
+# 解析rss请求
+class ParseRssRequest(BaseModel):
+    url: str
+
+
+class RssEntiy(BaseModel):
+    title: str
+    link: str
+    description: str
+    published: datetime | str
+    resource_id: str
+    content: list[str]
+
+    @field_validator("published")
+    @classmethod
+    def validate_published(cls, value):
+        if isinstance(value, str):
+            try:
+                # 使用 dateutil.parser 来解析日期
+                return parser.parse(value)
+            except Exception as e:
+                raise ValueError(f"Error parsing datetime: {e}")
+        return value
+
+
+class ParseRssResponse(BaseModel):
+    data: list[RssEntiy]
+
+
+# 抓取网页
+class CrawlUrlRequest(BaseModel):
+    url: str
+
+
+# 解析网页
+class ArticleCrawlRequest(BaseModel):
+    url: str
+
+
+class ArticleCrawlResponse(BaseModel):
+    url: str
+    html: str
+    cleaned_html: str
+    markdown: str
+    links: dict[str, list[dict]]
+    media: dict[str, list[dict]]
+
+
+class AIDebugRequest(BaseModel):
+    content: str
+    system_prompt: str
+
+
+class AIDebugResponse(BaseModel):
+    content: str
+    tags: list[str]
+    abstarct: str

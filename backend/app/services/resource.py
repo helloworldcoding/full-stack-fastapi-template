@@ -83,7 +83,6 @@ def parse_resource():
                         "link": resource.url,
                         "description": resource.description,
                         "published": datetime.now(),
-                        "published_parsed": datetime.now(),
                         "resource_id": resource.id,
                     }
                 ]
@@ -119,14 +118,21 @@ def parse_rss(url: str, resource_id: str = ""):
     d = feedparser.parse(url)
     entries = []
     for entry in d.entries:
+        content = []
+        if hasattr(entry, "content"):
+            if isinstance(entry.content, str):
+                content.append(entry.content)
+            elif isinstance(entry.content, list):
+                for item in entry.content:
+                    content.append(item.value)
         entries.append(
             {
                 "title": entry.title,
                 "link": entry.link,
                 "description": entry.description,
                 "published": entry.published,
-                "published_parsed": entry.published_parsed,
                 "resource_id": resource_id,
+                "content": content,
             }
         )
     feed = {
@@ -134,7 +140,6 @@ def parse_rss(url: str, resource_id: str = ""):
         "link": d.feed.link,
         "description": d.feed.description,
         "published": getattr(d.feed, "published", datetime.now()),
-        "published_parsed": getattr(d.feed, "published_parsed", datetime.now()),
     }
     return feed, entries
 
