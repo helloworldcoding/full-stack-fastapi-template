@@ -40,7 +40,6 @@ def bk_tts(content, sound="中文女", seed=0) -> str | None:
     audio_filename = generate_unique_filename()
     current_dir = Path(__file__).parent.parent
     audio_file = Path.joinpath(current_dir, "static", "audio", audio_filename)
-    print(audio_file)
     shutil.copy(result, audio_file)
     # 删除原始的 音频
     os.remove(result)

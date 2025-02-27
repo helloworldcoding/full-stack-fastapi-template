@@ -9,10 +9,12 @@ from sqlmodel import Session, create_engine, desc, func, select
 from app.api.deps import SessionDep
 from app.core.config import settings
 from app.models import (
+    AIDebugResponse,
     Article,
     ArticleCrawlResponse,
     ArticleCreate,
     Articles,
+    ArticleSave,
     ArticleUpdate,
 )
 from app.services.llm import (
@@ -282,3 +284,67 @@ def generate_audio() -> list[str]:
                 session.commit()
             except Exception as err:
                 print(f"generate audio {article.id} content error", err)
+
+
+def debug_ai(content: str, system_prompt: str) -> AIDebugResponse | None:
+    """
+    调试ai的
+    """
+    ret = request_ai("gpt-4o-mini", content, system_prompt)
+    if ret["status_code"] != 200:
+        raise Exception(f"parse {content} content error")
+    result = ret["answer"]
+    return {"answer": result}
+
+
+def aggregate_content_list(content_list: list[str], system_prompt: str = "") -> str:
+    """
+    聚合文章
+    """
+    content = ""
+    i = 1
+    for item in content_list:
+        content += f"【文章{i}开始】：\n{item}\n【文章{i}结束】\n"
+        i = i + 1
+    ret = request_ai("gpt-4o-mini", content, system_prompt)
+    if ret["status_code"] != 200:
+        raise Exception(f"parse {content} content error")
+    return ret["answer"]
+
+
+def get_audio(content: str = "", sound="中文女") -> str | None:
+    if content == "":
+        raise Exception("content is empty")
+    if sound not in [
+        "中文女",
+        "中文男",
+        "英文女",
+        "英文男",
+        "日语男",
+        "粤语女",
+        "韩语女",
+    ]:
+        raise Exception("soud is invalid")
+    return bk_tts(content, sound)
+
+
+def save_article(data: ArticleSave) -> ArticleCreate:
+    """
+    保存文章
+    """
+    with Session(engine) as session:
+        item_data = {
+            "resource_id": "",
+            "content": data.content,
+            "title": data.title,
+            "url": data.url,
+            "tags": data.tags,
+            "article_type": data.article_type,
+            "audio": data.audio,
+            "is_active": True,
+        }
+        item = Article.model_validate(item_data)
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+        return item

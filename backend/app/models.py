@@ -198,6 +198,16 @@ class ArticleCreate(ArticleBase):
     pass
 
 
+class ArticleSave(BaseModel):
+    content: str
+    title: str
+    abstract: str
+    tags: list[str]
+    article_type: str
+    audio: str
+    url: str
+
+
 class Articles(SQLModel):
     data: list[Article]
     count: int
@@ -262,6 +272,16 @@ class AIDebugRequest(BaseModel):
 
 
 class AIDebugResponse(BaseModel):
+    answer: str
+
+
+class AIAggregateRequest(BaseModel):
+    content_list: list[str]
+    system_prompt: str
+
+
+class AudioRequest(BaseModel):
+    start: str
     content: str
-    tags: list[str]
-    abstarct: str
+    end: str
+    sound: str

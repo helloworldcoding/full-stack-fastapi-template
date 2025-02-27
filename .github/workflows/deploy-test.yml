@@ -88,4 +88,3 @@ jobs:
           source .venv/bin/activate
           uv sync
           bash scripts/prestart.sh
-          sudo systemctl restart ai_boke.service
